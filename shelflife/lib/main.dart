@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shelflife/screens/setting_screen.dart';
 
 // Services
 import 'services/api_service.dart';
@@ -57,6 +58,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LoginScreen(),
         '/register': (context) => RegistrationScreen(),
         '/dashboard': (context) => DashboardScreen(),
+        '/setting': (context) => const SettingsPage(),
       },
     );
   }
