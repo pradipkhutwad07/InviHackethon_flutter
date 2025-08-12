@@ -8,9 +8,9 @@ class ApiService {
   final AuthService _authService;
   static const String _baseUrlKey = 'baseUrl';
   static const String devBaseUrl =
-      'https://70c0cda8a035.ngrok-free.app'; // Development URL (Android emulator)
+      'https://adequate-starling-obviously.ngrok-free.app'; // Development URL (Android emulator)
   static const String prodBaseUrl =
-      'https://70c0cda8a035.ngrok-free.app'; // Production URL
+      'https://novel-neatly-calf.ngrok-free.app'; // Production URL
 
   ApiService({AuthService? authService})
     : _authService = authService ?? AuthService();

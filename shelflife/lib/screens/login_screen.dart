@@ -1,10 +1,9 @@
-// lib/screens/login_screen.dart
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:shelflife/screens/notification_service.dart';
+import 'package:shelflife/screens/registration_screen.dart';
 import 'package:shelflife/services/api_service.dart';
 import 'package:shelflife/services/auth_service.dart';
-import 'package:shelflife/screens/registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,8 +18,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   String _errorMessage = '';
-  bool _isDevMode = true; // Default to development mode
-
+  bool _isDevMode = true;
+  bool _obscurePassword = true;
   late ApiService _apiService;
   late AuthService _authService;
 
@@ -29,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     _apiService = ApiService();
     _authService = AuthService();
-    _apiService.setBaseUrl(ApiService.devBaseUrl); // default
+    _apiService.setBaseUrl(ApiService.devBaseUrl);
   }
 
   @override
@@ -47,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        final fcmToken = await getFcmToken() ?? 'default_token';
+        final fcmToken = await NotificationService().getFcmToken() ?? 'default_token';
 
         await _apiService.setBaseUrl(
           _isDevMode ? ApiService.devBaseUrl : ApiService.prodBaseUrl,
@@ -59,15 +58,10 @@ class _LoginScreenState extends State<LoginScreen> {
           'fcmToken': fcmToken,
         });
 
-        print('Login response: $response');
-
         if (response != null && response['status'] == 1) {
-          // Extract the access token from response['data']
           final token = response['data']?['access_token'];
           if (token != null) {
             await _authService.saveToken(token);
-
-            // Navigate to dashboard screen using Navigator
             Navigator.pushReplacementNamed(context, '/dashboard');
           } else {
             setState(() {
@@ -76,8 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         } else {
           setState(() {
-            _errorMessage =
-                response?['message'] ?? 'Login failed. Please try again.';
+            _errorMessage = response?['message'] ?? 'Login failed. Please try again.';
           });
         }
       } catch (e) {
@@ -95,105 +88,159 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<String?> getFcmToken() async {
     try {
       final fcmToken = await FirebaseMessaging.instance.getToken();
-      print('FCM Token: $fcmToken');
       return fcmToken;
-    } catch (e) {
-      print('Error getting FCM token: $e');
+    } catch (_) {
       return null;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              // Environment Toggle
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('Development'),
-                  Switch(
-                    value: _isDevMode,
-                    onChanged: (value) async {
-                      setState(() {
-                        _isDevMode = value;
-                      });
-                      await _apiService.setBaseUrl(
-                        value ? ApiService.devBaseUrl : ApiService.prodBaseUrl,
-                      );
-                    },
-                  ),
-                  const Text('Production'),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: Text(
-                  'Current Environment: ${_isDevMode ? "Development" : "Production"}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Environment Toggle
+                  Text(
+                'ShelfLife',
+                style: theme.textTheme.headlineLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueAccent,
+                  letterSpacing: 1.5,
                 ),
+                textAlign: TextAlign.center,
               ),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                    return 'Please enter a valid email address';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16.0),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24.0),
-              if (_isLoading)
-                const CircularProgressIndicator()
-              else
-                ElevatedButton(onPressed: _login, child: const Text('Login')),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RegistrationScreen(),
+              const SizedBox(height: 32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Dot.Net', style: theme.textTheme.bodyMedium),
+                    const SizedBox(width: 8),
+                    Switch(
+                      value: _isDevMode,
+                      onChanged: (value) async {
+                        setState(() {
+                          _isDevMode = value;
+                        });
+                        await _apiService.setBaseUrl(
+                          value ? ApiService.devBaseUrl : ApiService.prodBaseUrl,
+                        );
+                      },
                     ),
-                  );
-                },
-                child: const Text(
-                  'Don\'t have an account? Click here to register',
+                    const SizedBox(width: 8),
+                    Text('Python', style: theme.textTheme.bodyMedium),
+                  ],
                 ),
-              ),
-              if (_errorMessage.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: Text(
-                    _errorMessage,
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
+
+                const SizedBox(height: 8),
+
+                // Text(
+                //   'Current Environment: ${_isDevMode ? "Development" : "Production"}',
+                //   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                // ),
+
+                const SizedBox(height: 32),
+
+                // Email field
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email),
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your email';
+                    }
+                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                      return 'Please enter a valid email address';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 20),
+
+                // Password field
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 32),
+
+                // Login button or loading indicator
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : ElevatedButton(
+                          onPressed: _login,
+                          child: const Text('Login', style: TextStyle(fontSize: 16)),
+                        ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Register link
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const RegistrationScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Don\'t have an account? Register here',
+                    style: TextStyle(decoration: TextDecoration.underline),
                   ),
                 ),
-            ],
+
+                if (_errorMessage.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20),
+                    child: Text(
+                      _errorMessage,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

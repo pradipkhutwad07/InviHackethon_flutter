@@ -13,6 +13,8 @@ class RegistrationScreen extends StatefulWidget {
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   // Controllers
   final _nameController = TextEditingController();
@@ -125,12 +127,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     if (_formKey.currentState!.validate()) {
       final apiService = ApiService();
       print('Registration started...');
-
+      
       final response = await apiService.post('signup', {
         'name': _nameController.text,
         'email': _emailController.text,
         'password': _passwordController.text,
-        "fcmToken": "dummy_fcm_token",
+        "fcmToken": "dummy_fcm_tokens",
         "default_reminder_days": 2,
         "preferred_categories": ["Electronics"],
         "default_unit": "pieces",
@@ -217,11 +219,23 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   TextFormField(
                     controller: _passwordController,
                     focusNode: _passwordFocusNode,
-                    obscureText: true,
-                    decoration: const InputDecoration(
+                    obscureText: _obscurePassword,
+                    decoration: InputDecoration(
                       labelText: 'Password',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.lock),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
                     ),
                     autovalidateMode:
                         _passwordTouched
@@ -235,11 +249,23 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   TextFormField(
                     controller: _confirmPasswordController,
                     focusNode: _confirmPasswordFocusNode,
-                    obscureText: true,
-                    decoration: const InputDecoration(
+                    obscureText: _obscureConfirmPassword,
+                    decoration: InputDecoration(
                       labelText: 'Confirm Password',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.lock_outline),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureConfirmPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureConfirmPassword = !_obscureConfirmPassword;
+                          });
+                        },
+                      ),
                     ),
                     autovalidateMode:
                         _confirmPasswordTouched

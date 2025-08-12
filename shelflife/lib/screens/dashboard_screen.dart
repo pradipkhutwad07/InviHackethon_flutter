@@ -519,7 +519,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Welcome, $_userName!'),
+        title: Text('Dashboard'),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
