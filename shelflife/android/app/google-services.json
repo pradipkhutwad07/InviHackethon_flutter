@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "858431930778",
+    "project_id": "shelflife-5480f",
+    "storage_bucket": "shelflife-5480f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:858431930778:android:08c4d01ddfe909f5183a23",
+        "android_client_info": {
+          "package_name": "com.invimatic.shelflife"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQWCCvdHl6aU3B4trDYWG6GNmH3iWQRXw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

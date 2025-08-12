@@ -1,13 +1,15 @@
-// lib/screens/splash_screen.dart
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shelflife/services/api_service.dart';
+import 'package:shelflife/services/auth_service.dart';
 import 'package:shelflife/screens/login_screen.dart';
+import 'package:shelflife/screens/dashboard_screen.dart'; // Import your dashboard screen
 
 class SplashScreen extends StatefulWidget {
   final ApiService apiService;
+  final AuthService authService;
 
-  const SplashScreen({super.key, required this.apiService});
+  const SplashScreen({super.key, required this.apiService, required this.authService});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -17,32 +19,27 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _navigateToLogin();
+    _checkAuthAndNavigate();
   }
 
-  Future<void> _navigateToLogin() async {
-    await Future.delayed(const Duration(seconds: 3));
-    // Check if the widget is still mounted before navigating
-    if (mounted) {
-      // Use the apiService to check the environment and navigate accordingly
-      final String baseUrl = await widget.apiService.getBaseUrl();
-      if (baseUrl.contains('production')) {
-        // Navigate to login, assuming login screen handles auth check
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const LoginScreen(),
-          ),
-        );
-      } else {
-        // For development, also navigate to login
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const LoginScreen(),
-          ),
-        );
-      }
+  Future<void> _checkAuthAndNavigate() async {
+    await Future.delayed(const Duration(seconds: 3)); // Keep splash delay
+
+    if (!mounted) return;
+
+    // Check token existence
+    bool hasToken = await widget.authService.hasToken();
+
+    if (hasToken) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
     }
   }
 
@@ -51,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       body: Center(
         child: Lottie.asset(
-          'assets/animations/Timer.json', // Make sure you have this file in your assets folder
+          'assets/animations/Timer.json',
           width: 200,
           height: 200,
           fit: BoxFit.fill,

@@ -7,10 +7,13 @@ import 'auth_service.dart';
 class ApiService {
   final AuthService _authService;
   static const String _baseUrlKey = 'baseUrl';
-  static const String devBaseUrl = 'http://10.0.2.2:3000'; // Development URL (Android emulator)
-  static const String prodBaseUrl = 'https://your-production-api.com'; // Production URL
+  static const String devBaseUrl =
+      'https://70c0cda8a035.ngrok-free.app'; // Development URL (Android emulator)
+  static const String prodBaseUrl =
+      'https://70c0cda8a035.ngrok-free.app'; // Production URL
 
-  ApiService({AuthService? authService}) : _authService = authService ?? AuthService();
+  ApiService({AuthService? authService})
+    : _authService = authService ?? AuthService();
 
   // Get the current base URL
   Future<String> getBaseUrl() async {
@@ -57,7 +60,11 @@ class ApiService {
     final url = Uri.parse('${await getBaseUrl()}/$endpoint');
     final headers = await _getHeaders();
     try {
-      final response = await http.post(url, headers: headers, body: jsonEncode(data));
+      final response = await http.post(
+        url,
+        headers: headers,
+        body: jsonEncode(data),
+      );
       return _handleResponse(response);
     } catch (e) {
       throw Exception('Network error: $e');
@@ -69,7 +76,11 @@ class ApiService {
     final url = Uri.parse('${await getBaseUrl()}/$endpoint');
     final headers = await _getHeaders();
     try {
-      final response = await http.put(url, headers: headers, body: jsonEncode(data));
+      final response = await http.put(
+        url,
+        headers: headers,
+        body: jsonEncode(data),
+      );
       return _handleResponse(response);
     } catch (e) {
       throw Exception('Network error: $e');
@@ -91,11 +102,9 @@ class ApiService {
   // Response handler
   dynamic _handleResponse(http.Response response) {
     if (response.statusCode == 200 || response.statusCode == 201) {
-      return jsonDecode(response.body);
-    } else if (response.statusCode == 401) {
-      throw Exception('Unauthorized: Token may be expired or invalid.');
+      return {'status': 1, 'data': jsonDecode(response.body)};
     } else {
-      throw Exception('API Error: ${response.statusCode} - ${response.body}');
+      return {'status': 0, 'error': response.body, 'code': response.statusCode};
     }
   }
 }

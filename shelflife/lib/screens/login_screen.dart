@@ -1,4 +1,5 @@
 // lib/screens/login_screen.dart
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shelflife/services/api_service.dart';
@@ -46,7 +47,8 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        // Set environment
+        final fcmToken = await getFcmToken() ?? 'default_token';
+
         await _apiService.setBaseUrl(
           _isDevMode ? ApiService.devBaseUrl : ApiService.prodBaseUrl,
         );
@@ -54,14 +56,28 @@ class _LoginScreenState extends State<LoginScreen> {
         final response = await _apiService.post('login', {
           'email': _emailController.text,
           'password': _passwordController.text,
+          'fcmToken': fcmToken,
         });
 
-        if (response != null && response['token'] != null) {
-          await _authService.saveToken(response['token']);
-          context.go('/dashboard');
+        print('Login response: $response');
+
+        if (response != null && response['status'] == 1) {
+          // Extract the access token from response['data']
+          final token = response['data']?['access_token'];
+          if (token != null) {
+            await _authService.saveToken(token);
+
+            // Navigate to dashboard screen using Navigator
+            Navigator.pushReplacementNamed(context, '/dashboard');
+          } else {
+            setState(() {
+              _errorMessage = 'Login failed: Token missing.';
+            });
+          }
         } else {
           setState(() {
-            _errorMessage = response?['message'] ?? 'Login failed. Please try again.';
+            _errorMessage =
+                response?['message'] ?? 'Login failed. Please try again.';
           });
         }
       } catch (e) {
@@ -76,12 +92,21 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<String?> getFcmToken() async {
+    try {
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+      print('FCM Token: $fcmToken');
+      return fcmToken;
+    } catch (e) {
+      print('Error getting FCM token: $e');
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-      ),
+      appBar: AppBar(title: const Text('Login')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -145,10 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
               if (_isLoading)
                 const CircularProgressIndicator()
               else
-                ElevatedButton(
-                  onPressed: _login,
-                  child: const Text('Login'),
-                ),
+                ElevatedButton(onPressed: _login, child: const Text('Login')),
               TextButton(
                 onPressed: () {
                   Navigator.pushReplacement(
@@ -158,7 +180,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   );
                 },
-                child: const Text('Don\'t have an account? Click here to register'),
+                child: const Text(
+                  'Don\'t have an account? Click here to register',
+                ),
               ),
               if (_errorMessage.isNotEmpty)
                 Padding(
